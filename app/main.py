@@ -1,6 +1,4 @@
 import os
-from logging import exception
-
 import aiohttp
 import boto3
 import json
