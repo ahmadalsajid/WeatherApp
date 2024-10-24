@@ -211,7 +211,7 @@ Once done with testing, remove with
 4. AWS DynamoDB (or Local equivalent) Integration: `Contains bug`
    - After storing the json file, log the event (with city name, timestamp, and S3 URL/local path) into a DynamoDB table or a local equivalent asynchronously.
    - Ensure that database interactions are performed using async methods.
-5. Caching with S3/Local Equivalent:
+5. Caching with S3/Local Equivalent:  `DONE`
    - Before fetching the weather data from the external API, check if the data for the requested city (fetched within the last 5 minutes) already exists in S3 or the local equivalent.
    - If it exists, retrieve it directly without calling the external API.
    - Implement a mechanism to expire the cache after 5 minutes.
