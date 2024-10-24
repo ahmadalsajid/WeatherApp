@@ -196,6 +196,28 @@ Content-Type: application/json; charset=utf-8
 
 Once done with testing, remove with
 
+## Tasks
+
+1. FastAPI Setup: `DONE`
+   - Create a FastAPI application with a single endpoint `/weather`.
+   - The endpoint should accept a `GET` request with a `city` query parameter.
+2. Asynchronous Data Fetching: `DONE`
+   - Use Python's `asyncio` to asynchronously fetch the current weather data from the external API based on the `city` parameter.
+   - Implement proper error handling to manage potential API failures or invalid city names.
+3. AWS S3 (or Local equivalent) Integration: `DONE`
+   - Store each fetched weather response as a JSON file in an S3 bucket or a local equivalent.
+   - The filename should be structured as `{city}_{timestamp}.json`.
+   - Use asynchronous methods to upload the data to the S3 or local equivalent.
+4. AWS DynamoDB (or Local equivalent) Integration: `Contains bug`
+   - After storing the json file, log the event (with city name, timestamp, and S3 URL/local path) into a DynamoDB table or a local equivalent asynchronously.
+   - Ensure that database interactions are performed using async methods.
+5. Caching with S3/Local Equivalent:
+   - Before fetching the weather data from the external API, check if the data for the requested city (fetched within the last 5 minutes) already exists in S3 or the local equivalent.
+   - If it exists, retrieve it directly without calling the external API.
+   - Implement a mechanism to expire the cache after 5 minutes.
+6. Deployment: `DONE`
+   - Provide deployment scripts (like `Dockerfile`, `docker-compose.yml` etc.) in the repository.
+
 ```
 docker compose down --rmi local -v
 ```
