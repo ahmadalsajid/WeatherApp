@@ -1,64 +1,16 @@
 # WeatherApp
 
-## Status
-
-
-This is a simple Python FastAPI application that will be used to demonstrate
-GitHub Actions for CI/CD, Docker Hub to publish the image, AWS ECS for deployment,
-and Terraform for IaC.
-
-We can separate the tasks in three main parts,
-
-* Containerize the application with Docker
-* Manage the infrastructure with Terraform
-* Create CI/CD pipeline with GitHub Actions
+This is a simple weather API service using FastAPI that fetches weather
+data from an external public API (openweathermap).
 
 ## Docker
 
-First, let's create a super simple Python FastAPI application that we can use
-to manage with CI/C and deploy on AWS.
-Create a directory [app](./app) with the files as below, you can refer to this
-repository for the actual codes.
-
-```
-app
-├── .dockerignore
-├── Dockerfile
-├── __init__.py
-├── main.py
-├── requirements.txt
-└── test_main.py
-```
+First, clone this repository to your local machine, and create a `.env` file
+from [sample.env](./app/sample.env) in the [app](./app) directory. Put your
+own API key to make the app work.
 
 You can use the [docker-compose.yaml](./docker-compose.yaml) to spin up a
-container to test the application. It has only 2 APIs,
-
-```
-http://localhost:8000/
-```
-
-which returns the below response
-
-```
-{
-    "Hello": "World"
-}
-```
-
-And,
-
-```
-http://localhost:8000/greetings/{some_name}?q={some_optional_query}
-```
-
-that returns
-
-```
-{
-    "Hello": "some_name",
-    "q": "some_optional_query"
-}
-```
+container to test the application.
 
 Let's spin up the application by
 
@@ -66,116 +18,146 @@ Let's spin up the application by
 docker compose up -d
 ```
 
+It has only 1 API,
+
+```
+GET http://localhost:8000/weather
+Content-Type: application/json
+```
+
+which returns the below response, with default `city` to `Dhaka`
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+{
+    "coord": {
+        "lon": 90.4074,
+        "lat": 23.7104
+    },
+    "weather": [
+        {
+            "id": 721,
+            "main": "Haze",
+            "description": "haze",
+            "icon": "50d"
+        }
+    ],
+    "base": "stations",
+    "main": {
+        "temp": 300.14,
+        "feels_like": 303.15,
+        "temp_min": 300.14,
+        "temp_max": 300.14,
+        "pressure": 1008,
+        "humidity": 83,
+        "sea_level": 1008,
+        "grnd_level": 1006
+    },
+    "visibility": 4000,
+    "wind": {
+        "speed": 4.63,
+        "deg": 50
+    },
+    "clouds": {
+        "all": 75
+    },
+    "dt": 1729754562,
+    "sys": {
+        "type": 1,
+        "id": 9145,
+        "country": "BD",
+        "sunrise": 1729727986,
+        "sunset": 1729769103
+    },
+    "timezone": 21600,
+    "id": 1185241,
+    "name": "Dhaka",
+    "cod": 200
+}
+```
+
+Or, you can pass a city name as a `city` query parameter, i.e.
+
+```
+GET http://localhost:8000/weather?city=london
+Content-Type: application/json
+```
+
+which returns the below response,
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+{
+    "coord": {
+        "lon": -0.1257,
+        "lat": 51.5085
+    },
+    "weather": [
+        {
+            "id": 800,
+            "main": "Clear",
+            "description": "clear sky",
+            "icon": "01d"
+        }
+    ],
+    "base": "stations",
+    "main": {
+        "temp": 282.11,
+        "feels_like": 280.69,
+        "temp_min": 280.53,
+        "temp_max": 283.29,
+        "pressure": 1021,
+        "humidity": 93,
+        "sea_level": 1021,
+        "grnd_level": 1018
+    },
+    "visibility": 10000,
+    "wind": {
+        "speed": 2.57,
+        "deg": 90
+    },
+    "clouds": {
+        "all": 0
+    },
+    "dt": 1729755106,
+    "sys": {
+        "type": 2,
+        "id": 2075535,
+        "country": "GB",
+        "sunrise": 1729752021,
+        "sunset": 1729788521
+    },
+    "timezone": 3600,
+    "id": 2643743,
+    "name": "London",
+    "cod": 200
+}
+```
+
+If you pass a wrong city name, i.e.
+
+```
+GET http://localhost:8000/weather?city=londoiin
+Content-Type: application/json
+```
+
+It returns the below error response,
+
+```
+HTTP/1.1 404 Not Found
+Content-Type: application/json; charset=utf-8
+{
+    "detail": {
+        "cod": "404",
+        "message": "city not found"
+    }
+}
+```
+
 Once done with testing, remove with
 
 ```
 docker compose down --rmi local
 ```
-
-## Terraform
-
-We have containerized the app. Now, we need to create the infrastructure to 
-deploy them. We will use AWS ECS to host our application.  
-Lets have a look at the [infrastructure](./infrastructure) directory.
-
-```
-./infrastructure
-├── dev
-│ ├── ecs
-│ │ ├── .terraform.lock.hcl
-│ │ ├── main.tf
-│ │ ├── outputs.tf
-│ │ └── variables.tf
-│ └── vpc
-│   ├── .terraform.lock.hcl
-│   ├── main.tf
-│   ├── outputs.tf
-│   └── variables.tf
-├── modules
-│ ├── ecs
-│ │ ├── 0-variables.tf
-│ │ ├── 1-vpc.tf
-│ │ ├── 2-security-groups.tf
-│ │ ├── 3-load-balancer.tf
-│ │ ├── 4-iam.tf
-│ │ ├── 5-ecs.tf
-│ │ ├── 6-outputs.tf
-│ │ └── templates
-│ │     └── ecs
-│ │         └── app.json.tpl
-│ └── vpc
-│   ├── main.tf
-│   ├── outputs.tf
-│   └── variables.tf
-└── prod
-    ├── ecs
-    | |── .terraform.lock.hcl
-    │ ├── main.tf
-    │ ├── outputs.tf
-    │ └── variables.tf
-    └── vpc
-      |── .terraform.lock.hcl
-      ├── main.tf
-      ├── outputs.tf
-      └── variables.tf
-```
-
-We can have an explanation for this. We will be creating 2 separate VPCs to
-deploy our app, i.e., one for the `dev` environment, another one for the `prod`
-environment. To keep our infrastructure safe, we will break it to the smallest 
-modules possible. So, we will create the VPC and other ECS things separately.  
-To do so, first, go to the [vpc](./infrastructure/dev/vpc) directory and update
-the variables with your preferred/actual ones in the 
-[variables.tf](./infrastructure/dev/vpc/variables.tf) file. After that, 
-initialise by the command
-
-```
-terraform init
-```
-
-After initialising, create the resources by
-
-```
-terraform apply
-```
-
-Have patience, your VPC will spin up in a couple of minutes, please keep 
-the VPC ID in the outputs to use in the later step.  
-  
-Once the VPC is up, now we will be creating the ECS cluster. Go to 
-[ecs](./infrastructure/dev/ecs) directory and update the variables again in 
-the file [variables](./infrastructure/dev/ecs/variables.tf) accordingly.
-Rest of the process is same as before,
-
-```
-terraform init
-terraform apply
-```
-
-> Keep in mind, this will launch resources in your AWS and if you forget 
-> to clean up, it's going to cost you some money. So, please clean up the 
-> environment every time you are done with testing, with the command 
-> `terraform destroy` in the respective directories, i.e., 
-> `infrastructure/dev/vpc/` and `infrastructure/dev/ecs//`
-
-
-## GitHub Actions
-
-Finally, we are at the end of our automation journey. We will create the CI/CD
-pipeline with GitHub Actions. Let's create two YAML files where we are going 
-to configure the pipelines for two different environments. The directory 
-structure is 
-
-```
-.github
-└── workflows
-    ├── development.yml
-    └── production.yml
-```
-
-The workflow is self-explanatory. BTW, you will need to create two environment
-in your GitHub code repository's `settings` option, and set some variables 
-and secrets i.e., Docker Hub username and token, AWS Credentials and so on to 
-make this workflow work. We have two almost identical YML files, for development
-and production environments respectively. We can have many more customizations
-based on the needs.
