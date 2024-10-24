@@ -201,3 +201,4 @@ terraform.rc
 
 # Ignore Terragrunt generated directories/files
 .terragrunt-cache/
+volume

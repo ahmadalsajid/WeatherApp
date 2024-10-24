@@ -3,20 +3,50 @@
 This is a simple weather API service using FastAPI that fetches weather
 data from an external public API (openweathermap).
 
-## Docker
+## Setup
 
 First, clone this repository to your local machine, and create a `.env` file
 from [sample.env](./app/sample.env) in the [app](./app) directory. Put your
 own API key to make the app work.
 
-You can use the [docker-compose.yaml](./docker-compose.yaml) to spin up a
+Make sure the below tools are installed on your computer
+
+* `Docker Desktop`: Download and configure from this [link](https://docs.docker.com/get-started/get-docker/)
+* `localstack-cli`:
+    * Visit [localstack/localstack-cli](https://github.com/localstack/localstack-cli/releases/latest) and download the
+      latest release for your platform.
+    * Extract the downloaded archive to a directory included in your PATH variable: For macOS/Linux, use the command:
+      `sudo tar xvzf ~/Downloads/localstack-cli-*.tar.gz -C /usr/local/bin`
+
+Now, you can use the [docker-compose.yaml](./docker-compose.yaml) to spin up a
 container to test the application.
 
 Let's spin up the application by
 
 ```
-docker compose up -d
+docker compose up -d --build
 ```
+
+This will set up the `localstack` to mock AWS services locally. Once the
+containers are up, check the localstack availability by
+
+```
+$ localstack status services
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓
+┃ Service                  ┃ Status      ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩
+..........................................
+│ dynamodb                 │ ✔ available │
+..........................................
+│ lambda                   │ ✔ available │
+..........................................
+│ s3                       │ ✔ available │
+..........................................
+└──────────────────────────┴─────────────┘
+
+```
+
+## Usage
 
 It has only 1 API,
 
@@ -156,8 +186,16 @@ Content-Type: application/json; charset=utf-8
 }
 ```
 
+## Tools / Language / Framework
+* Python
+* FastAPI
+* Docker Desktop
+* Localstack
+  * S3
+  * DynamoDB
+
 Once done with testing, remove with
 
 ```
-docker compose down --rmi local
+docker compose down --rmi local -v
 ```
